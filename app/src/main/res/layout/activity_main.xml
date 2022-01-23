@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/purple_500"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:title="Contact List"
+        app:titleTextColor="@color/white" />
+
+    <TextView
+        android:id="@+id/tv_contact_search"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Search:"
+        android:textColor="@color/purple_700"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="@+id/et_contact_search"
+        app:layout_constraintStart_toStartOf="@id/guideline_margin_start"
+        app:layout_constraintTop_toTopOf="@+id/et_contact_search" />
+
+    <EditText
+        android:id="@+id/et_contact_search"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:ems="10"
+        android:hint="Search here..."
+        android:textColorHint="@color/light_gray"
+        android:inputType="textPersonName"
+        android:minHeight="48dp"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toStartOf="@+id/iv_contact_search"
+        app:layout_constraintStart_toEndOf="@+id/tv_contact_search"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+
+    <ImageView
+        android:id="@+id/iv_contact_search"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toBottomOf="@+id/et_contact_search"
+        app:layout_constraintEnd_toEndOf="@id/guideline_margin_end"
+        app:layout_constraintTop_toTopOf="@+id/et_contact_search"
+        app:srcCompat="@drawable/ic_baseline_search_24"
+        app:tint="@color/purple_500" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_contacts"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/guideline_margin_end"
+        app:layout_constraintStart_toStartOf="@id/guideline_margin_start"
+        app:layout_constraintTop_toBottomOf="@+id/et_contact_search"
+        tools:listitem="@layout/item_contact" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add_contact"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:backgroundTint="@color/purple_500"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_baseline_person_add_24"
+        app:tint="@color/white"
+        tools:ignore="SpeakableTextPresentCheck" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_margin_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="8dp" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_margin_end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="8dp" />
+
+    <TextView
+        android:id="@+id/tv_no_records"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No records available"
+        android:textSize="18sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/rv_contacts"
+        app:layout_constraintEnd_toEndOf="@id/rv_contacts"
+        app:layout_constraintStart_toStartOf="@id/rv_contacts"
+        app:layout_constraintTop_toTopOf="@id/rv_contacts"
+        tools:visibility="invisible" />
+</androidx.constraintlayout.widget.ConstraintLayout>
