@@ -46,7 +46,7 @@ class MainActivity : ToolbarBaseActivity() {
         contactAdapter = ContactAdapter(
             contactList,
             { id -> editContact(id) },
-            { id -> onDeleteContact(id) }
+            { id -> deleteContact(id) }
         )
         binding.rvContacts.adapter = contactAdapter
         setNoRecordsMessageVisibility(contactList)
@@ -61,15 +61,18 @@ class MainActivity : ToolbarBaseActivity() {
         val dialogBinding = DialogSaveContactBinding.inflate(layoutInflater)
         showSaveContactDialog("Add Contact", dialogBinding) {
             onSaveContact(dialogBinding) { (_, name, phone) ->
-                dbHelper?.let {
-                    val rowId = it.insertContact(name, phone).toInt()
-                    Log.d("Inserted Contact", "$rowId")
-                    if (rowId != -1) {
-                        val insertionPosition = contactList.size
-                        contactList.add(Contact(rowId, name, phone))
-                        contactAdapter.notifyItemInserted(insertionPosition)
-                        binding.tvNoRecords.visibility = View.GONE
-                    }
+                dbHelper?.let { helper ->
+                    runOnBackgroundWithProgressBar({
+                        helper.insertContact(name, phone).toInt()
+                    }, { rowId ->
+                        Log.d("Inserted Contact", "$rowId")
+                        if (rowId > -1) {
+                            val insertionPosition = contactList.size
+                            contactList.add(Contact(rowId, name, phone))
+                            contactAdapter.notifyItemInserted(insertionPosition)
+                            binding.tvNoRecords.visibility = View.GONE
+                        }
+                    })
                 }
             }
         }
@@ -84,19 +87,100 @@ class MainActivity : ToolbarBaseActivity() {
             }
             showSaveContactDialog("Edit Contact", dialogBinding) {
                 onSaveContact(dialogBinding, id) { updatedContact ->
-                    dbHelper?.let {
-                        if (it.updateContact(updatedContact) == 1) {
-                            contactRow.contact.apply {
-                                name = updatedContact.name
-                                phone = updatedContact.phone
+                    dbHelper?.let { helper ->
+                        runOnBackgroundWithProgressBar({
+                            helper.updateContact(updatedContact)
+                        }, { numUpdatedRows ->
+                            if (numUpdatedRows == 1) {
+                                contactRow.contact.apply {
+                                    name = updatedContact.name
+                                    phone = updatedContact.phone
+                                }
+                                contactAdapter.notifyItemChanged(contactRow.position)
                             }
-                            contactAdapter.notifyItemChanged(contactRow.position)
-                        }
+                        })
                     }
                 }
             }
         } else {
             Log.e("Contact list", "Contact edit id not found")
+        }
+    }
+
+    private fun deleteContact(id: Int) {
+        val contactRow = getContactRowOrNull(id)
+        if (contactRow != null) {
+            dbHelper?.let { helper ->
+                runOnBackgroundWithProgressBar({
+                    helper.deleteContactById(contactRow.contact.id)
+                }, { numDeletedRows ->
+                    if (numDeletedRows == 1) {
+                        contactList.removeAt(contactRow.position)
+                        contactAdapter.notifyItemRemoved(contactRow.position)
+                        setNoRecordsMessageVisibility(contactList)
+                    }
+                })
+            }
+        } else {
+            Log.e("Contact list", "Contact delete id not found")
+        }
+    }
+
+    private fun searchContact() {
+        val searchString = binding.etContactSearch.text.toString()
+        if (searchString.isNotBlank()) {
+            dbHelper?.let { helper ->
+                runOnBackgroundWithProgressBar({
+                    binding.tvNoRecords.visibility = View.GONE
+                    helper.searchContacts(searchString)
+                }, { searchedContacts ->
+                    setContactAdapter(searchedContacts)
+                })
+            }
+        } else {
+            setContactAdapter(contactList)
+        }
+    }
+
+    private fun <T> runOnBackgroundWithProgressBar(backgroundBlock: () -> T, uiBlock: (T) -> Unit) {
+        binding.progressBar.visibility = View.VISIBLE
+        Thread {
+            val result = backgroundBlock()
+            runOnUiThread {
+                uiBlock(result)
+                binding.progressBar.visibility = View.GONE
+            }
+        }.start()
+    }
+
+    private fun getContactRowOrNull(id: Int): ContactRow? {
+        var contactRow: ContactRow? = null
+        for ((position, contact) in contactList.withIndex()) {
+            if (contact.id == id) {
+                contactRow = ContactRow(position, contact)
+                break
+            }
+        }
+        return contactRow
+    }
+
+    private fun showSaveContactDialog(
+        title: String,
+        dialogBinding: DialogSaveContactBinding,
+        onSaveContactListener: () -> Boolean
+    ) {
+        val contactDialog = Dialog(this, R.style.Theme_CustomDialog)
+        with(dialogBinding) {
+            tvContactTitle.text = title
+            tvSaveContact.setOnClickListener {
+                if (onSaveContactListener()) contactDialog.dismiss()
+            }
+            tvCancelContact.setOnClickListener { contactDialog.dismiss() }
+        }
+        with(contactDialog) {
+            setContentView(dialogBinding.root)
+            setCancelable(false)
+            show()
         }
     }
 
@@ -121,70 +205,12 @@ class MainActivity : ToolbarBaseActivity() {
         }
     }
 
-    private fun onDeleteContact(id: Int) {
-        val contactRow = getContactRowOrNull(id)
-        if (contactRow != null) {
-            dbHelper?.let {
-                if (it.deleteContactById(contactRow.contact.id) == 1) {
-                    contactList.removeAt(contactRow.position)
-                    contactAdapter.notifyItemRemoved(contactRow.position)
-                    setNoRecordsMessageVisibility(contactList)
-                }
-            }
-        } else {
-            Log.e("Contact list", "Contact delete id not found")
-        }
-    }
-
-    private fun searchContact() {
-        val searchString = binding.etContactSearch.text.toString()
-        if (searchString.isNotBlank()) {
-            dbHelper?.let {
-                val searchedContacts = it.searchContacts(searchString)
-                setContactAdapter(searchedContacts)
-            }
-        } else {
-            setContactAdapter(contactList)
-        }
-    }
-
-    private fun showSaveContactDialog(
-        title: String,
-        dialogBinding: DialogSaveContactBinding,
-        onSaveContactListener: () -> Boolean
-    ) {
-        val contactDialog = Dialog(this, R.style.Theme_CustomDialog)
-        with(dialogBinding) {
-            tvContactTitle.text = title
-            tvSaveContact.setOnClickListener {
-                if (onSaveContactListener()) contactDialog.dismiss()
-            }
-            tvCancelContact.setOnClickListener { contactDialog.dismiss() }
-        }
-        with(contactDialog) {
-            setContentView(dialogBinding.root)
-            setCancelable(false)
-            show()
-        }
-    }
-
     private fun generateContacts() {
         with(ContactSingleton.contactList) {
             add(Contact(1, "Fulano", "(99) 91234-5678"))
             add(Contact(2, "Beltrano", "(99) 923456789"))
             add(Contact(3, "Sicrano", "(99) 934567890"))
         }
-    }
-
-    private fun getContactRowOrNull(id: Int): ContactRow? {
-        var contactRow: ContactRow? = null
-        for ((position, contact) in contactList.withIndex()) {
-            if (contact.id == id) {
-                contactRow = ContactRow(position, contact)
-                break
-            }
-        }
-        return contactRow
     }
 
     override fun onDestroy() {
