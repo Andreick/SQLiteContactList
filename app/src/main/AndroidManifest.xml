@@ -11,10 +11,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SQLiteContactList">
         <activity
-            android:name=".ToolbarBaseActivity"
+            android:name=".base.ToolbarBaseActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".view.ContactListActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

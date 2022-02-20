@@ -1,4 +1,4 @@
-package com.andreick.sqlitecontactlist
+package com.andreick.sqlitecontactlist.base
 
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar

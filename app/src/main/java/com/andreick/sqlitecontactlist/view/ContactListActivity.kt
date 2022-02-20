@@ -1,41 +1,63 @@
-package com.andreick.sqlitecontactlist
+package com.andreick.sqlitecontactlist.view
 
+import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.andreick.sqlitecontactlist.data.ContactRow
+import com.andreick.sqlitecontactlist.Contact
+import com.andreick.sqlitecontactlist.ContactAdapter
+import com.andreick.sqlitecontactlist.ContactListApplication
+import com.andreick.sqlitecontactlist.R
+import com.andreick.sqlitecontactlist.databinding.ActivityContactListBinding
+import com.andreick.sqlitecontactlist.model.ContactRow
 import com.andreick.sqlitecontactlist.database.DbHelper
-import com.andreick.sqlitecontactlist.databinding.ActivityMainBinding
 import com.andreick.sqlitecontactlist.databinding.DialogSaveContactBinding
+import com.andreick.sqlitecontactlist.repository.ContactListRepository
+import com.andreick.sqlitecontactlist.viewmodel.ContactListViewModel
 
-class MainActivity : ToolbarBaseActivity() {
+class ContactListActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityContactListBinding
     private lateinit var contactAdapter: ContactAdapter
     private lateinit var contactList: MutableList<Contact>
+    private var viewModel: ContactListViewModel? = null
     private var dbHelper: DbHelper? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityContactListBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setupBackToolbar(binding.toolbar)
+        if (viewModel == null) viewModel =
+            ContactListViewModel(ContactListRepository(DbHelper(this)))
+        initDrawer()
         dbHelper = ContactListApplication.instance.dbHelper
         contactList = dbHelper?.fetchAllContacts()?.toMutableList() ?: mutableListOf()
         setupRecyclerView()
         setupListeners()
     }
 
-    private fun setupRecyclerView() {
-        binding.rvContacts.layoutManager = LinearLayoutManager(this@MainActivity)
-        setContactAdapter(contactList)
-        binding.rvContacts.addItemDecoration(
-            DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
+    private fun initDrawer() {
+        setSupportActionBar(binding.toolbar)
+        val toggle = ActionBarDrawerToggle(
+            this,
+            binding.drawerLayout, binding.toolbar,
+            R.string.open_drawer, R.string.close_drawer
         )
+        binding.drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+    }
+
+    private fun setupRecyclerView() {
+        binding.rvContacts.layoutManager = LinearLayoutManager(this@ContactListActivity)
+        setContactAdapter(contactList)
+        /*binding.rvContacts.addItemDecoration(
+            DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
+        )*/
     }
 
     private fun setNoRecordsMessageVisibility(contactList: List<Contact>) {
@@ -127,18 +149,25 @@ class MainActivity : ToolbarBaseActivity() {
     }
 
     private fun searchContact() {
-        val searchString = binding.etContactSearch.text.toString()
-        if (searchString.isNotBlank()) {
-            dbHelper?.let { helper ->
-                runOnBackgroundWithProgressBar({
-                    binding.tvNoRecords.visibility = View.GONE
-                    helper.searchContacts(searchString)
-                }, { searchedContacts ->
+        viewModel?.let { viewModel ->
+            val searchString = binding.etContactSearch.text.toString()
+            binding.progressBar.visibility = View.VISIBLE
+            viewModel.searchContact(searchString, { searchedContacts ->
+                runOnUiThread {
                     setContactAdapter(searchedContacts)
-                })
-            }
-        } else {
-            setContactAdapter(contactList)
+                    binding.progressBar.visibility = View.GONE
+                }
+            }, { e ->
+                runOnUiThread {
+                    AlertDialog.Builder(this)
+                        .setTitle("Warning")
+                        .setMessage(e.message)
+                        .setPositiveButton("Ok") { alert, _ ->
+                            alert.dismiss()
+                        }
+                        .show()
+                }
+            })
         }
     }
 
@@ -197,19 +226,11 @@ class MainActivity : ToolbarBaseActivity() {
             true
         } else {
             Toast.makeText(
-                this@MainActivity,
+                this@ContactListActivity,
                 "Name or phone cannot be blank",
                 Toast.LENGTH_SHORT
             ).show()
             false
-        }
-    }
-
-    private fun generateContacts() {
-        with(ContactSingleton.contactList) {
-            add(Contact(1, "Fulano", "(99) 91234-5678"))
-            add(Contact(2, "Beltrano", "(99) 923456789"))
-            add(Contact(3, "Sicrano", "(99) 934567890"))
         }
     }
 

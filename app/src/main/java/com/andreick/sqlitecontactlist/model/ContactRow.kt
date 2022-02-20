@@ -1,4 +1,4 @@
-package com.andreick.sqlitecontactlist.data
+package com.andreick.sqlitecontactlist.model
 
 import com.andreick.sqlitecontactlist.Contact
 

@@ -15,7 +15,10 @@
         <entry key="..\:/Users/Andreick/Documents/Estudos/Android/Demos/SQLiteContactList/app/src/main/res/layout/dialog_add_or_edit_contact.xml" value="0.5" />
         <entry key="..\:/Users/Andreick/Documents/Estudos/Android/Demos/SQLiteContactList/app/src/main/res/layout/dialog_new_contact.xml" value="0.28306159420289856" />
         <entry key="..\:/Users/Andreick/Documents/Estudos/Android/Demos/SQLiteContactList/app/src/main/res/layout/dialog_save_contact.xml" value="0.36666666666666664" />
-        <entry key="..\:/Users/Andreick/Documents/Estudos/Android/Demos/SQLiteContactList/app/src/main/res/layout/item_contact.xml" value="0.5" />
+        <entry key="..\:/Users/Andreick/Documents/Estudos/Android/Demos/SQLiteContactList/app/src/main/res/layout/drawer_menu.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/Andreick/Documents/Estudos/Android/Demos/SQLiteContactList/app/src/main/res/layout/item_contact.xml" value="0.1" />
+        <entry key="..\:/Users/Andreick/Documents/Estudos/Android/Demos/SQLiteContactList/app/src/main/res/menu/menu.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/Andreick/Documents/Estudos/Android/Demos/SQLiteContactList/app/src/main/res/menu/menu_main.xml" value="0.36102564102564105" />
       </map>
     </option>
   </component>
